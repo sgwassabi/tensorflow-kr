@@ -1,4 +1,5 @@
 # 텐서플로우를 이용하여 신경망 양자화(Quantize) 하는 방법
+(v1.0)
 
 최신 신경망이 개발될 때, 가장 큰 도전은 어떻게든 일을 하게 하는 것이였다.  이것
 은 학습에서 정확도와 속도가 가장 중요했다는 것을 의미한다. 부동소수점을 이용한 
@@ -60,7 +61,7 @@ Quantize의 다른 이유는 연산을 통한 추론 과정에서 하드웨어 �
 
 8bit를 이용한 연산으로 옮겨갈 경우, 모델들을 더욱 빠르고, 저전력(휴대기기에서 중
 요한 조건)으로 동작시킬 수 있습니다. 또한 부동 소수점 연산이 불가능한 많은 embed
-ded 시스템에 적용될 수 있습니다, 따라서 IoT 세상에 많은 어플리케이션에 적용 될 
+ded 시스템에 적용될 수 있습니다, 따라서 IoT 세상에 많은 애플리케이션에 적용 될 
 수 있습니다.
 
 ## 왜 낮은 정밀도로 바로 학습시키지 않는 것인가요?
@@ -81,8 +82,8 @@ TensorFlow는 제품화 단계 등급의 8bit 연산기능을 지원하고 있�
 ```sh
 curl http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz -o /tmp/inceptionv3.tgz
 tar xzf /tmp/inceptionv3.tgz -C /tmp/
-bazel build tensorflow/contrib/quantization/tools:quantize_graph
-bazel-bin/tensorflow/contrib/quantization/tools/quantize_graph \
+bazel build tensorflow/tools/quantization/tools:quantize_graph
+bazel-bin/tensorflow/tools/quantization/tools/quantize_graph \
 --input=/tmp/classify_image_graph_def.pb \
 --output_node_names="softmax" --output=/tmp/quantized_graph.pb \
 --mode=eightbit
@@ -122,12 +123,12 @@ bazel-bin/tensorflow/examples/label_image/label_image \
 그것들이 어떻게 생겼는지에 대한 그림 입니다. 처음으로 소개할 것은 입력과 출력이 
 부동 소수점으로 이루어진 원본 ReLU 연산입니다:
 
-![Relu Diagram](../../images/quantization0.png)
+![Relu Diagram](https://www.tensorflow.org/images/quantization0.png)
 
 그리고, 아래 그림은 동일하지만 변환된 subgraph입니다, 여전히 부동 소수점 입력과
 출력을 갖고 있지만 내부 변환을 통해 연산은 8bit로 진행되는 것을 알 수 있습니다.
 
-![Converted Diagram](../../images/quantization1.png)
+![Converted Diagram](https://www.tensorflow.org/images/quantization1.png)
 
 최대, 최소값 연산은 처음의 부동 소수점 tensor를 확인하고 역양자화(dequantize)연
 산을 위해 공급됩니다. 양자화 표현 방법에 관한 설명은 나중에 언급하도록 하겠습
@@ -138,7 +139,7 @@ bazel-bin/tensorflow/examples/label_image/label_image \
 소수점과 동일(여기서는 8bit quantize를 의미)하다면, 양자화와 역 양자화는 필요가
 없게 되고 서로 상쇄될 것입니다 아래와 같이요:
 
-![Stripping Diagram](../../images/quantization2.png)
+![Stripping Diagram](https://www.tensorflow.org/images/quantization2.png)
 
 모든 연산(graph in tensorflow)들이 양자화 된 거대한 모델에 적용된다면 tensor들의
 연산은 모두 부동 소수점으로의 변환 없이 8bit로 끝낼 수 있습니다.
@@ -169,10 +170,9 @@ Quantized | Float
 
 이런 형식의 장점은 범위를 통해 그 값을 표현할 수 있다는 점이고, 대칭일 필요가 없
 습니다, 또한 signed 형식 혹은 unsigned 형식에 구애받지 않습니다, 선형 분포는 계산
-을 바로 수행할 수 있습니다. 다음 [Song Han's code books]에서와 같이 다른 양자 표
-현 방식 또한 존재합니다.
-(http://arxiv.org/pdf/1510.00149.pdf) 비 선형적 분포를 이용하여 부동 소수점을 표
-현하는 방법이지만, 계산은 복잡해지는 경향이 있습니다.
+을 바로 수행할 수 있습니다. 다음 [Song Han's code books](http://arxiv.org/pdf/1510.00149.pdf)
+에서와 같이 다른 양자 표현 방식 또한 존재합니다. 비 선형적 분포를 이용하여 
+부동 소수점을 표현하는 방법이지만, 계산은 복잡해지는 경향이 있습니다.
 
 이런 방식으로 양자화 하는 것의 장점은 언제든지 이리저리 부동 소수점에서 양자화 값
 으로 변환이 가능하다는 점 입니다, 또는 디버깅을 위해 tensor를 분석할 때도 항상 
@@ -193,8 +193,8 @@ get a bit dense!
 
 우리는 embedded 기기에서 8bit 수학적 연산을 통한 결과가 부동 소수점보다 훨씬
 우수한 성능을 보인다는 사실을 알게 되었습니다(연산 속도인것 같습니다.;번역자).
-우리가 사용하고 최적화한 행렬곱 framework를 [gemmlowp] 에서 확인 할 수 있습니다
-(https://github.com/google/gemmlowp). TensorFlow의 ops들의 최대 성능을 모바일 
+우리가 사용하고 최적화한 행렬곱 framework를 [gemmlowp](https://github.com/google/gemmlowp) 
+에서 확인 할 수 있습니다. TensorFlow의 ops들의 최대 성능을 모바일 
 기기에서 얻기 위해 우리가 이번 실험등을 통해 얻은 결과들을 이용하여 활발히 연구
 하고 있습니다. 8-bit 모델을 더욱 폭넓고 다양한 기기들을 지원하기를 희망하고 있습
 니다. 그러기 위해 지금은 양자화 구현이 빠르고 정확한 reference 구현이 되어야 할
